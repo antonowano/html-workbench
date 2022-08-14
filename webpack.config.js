@@ -1,38 +1,47 @@
-const PugPlugin = require('pug-plugin');
+const HandlebarsPlugin = require('handlebars-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const devMode = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-    mode: process.env.NODE_ENV,
-    devtool: 'inline-source-map',
+    mode: devMode ? 'development' : 'production',
+    devtool: 'source-map',
     entry: {
-        index: './src/pages/index.pug',
+        index: './src/pages/index.js',
     },
     devServer: {
         watchFiles: ['src/**/*'],
     },
     output: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].js',
         path: __dirname + '/dist',
     },
     module: {
         rules: [
             {
-                test: /\.pug$/i,
-                loader: PugPlugin.loader,
-                options: {
-                    method: 'render',
-                },
-            },
-            {
                 test: /\.s[ac]ss$/i,
-                use: ['css-loader', 'sass-loader'],
+                use: [
+                    devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+                    'css-loader',
+                    'postcss-loader',
+                    'sass-loader',
+                ],
             },
         ]
     },
     plugins: [
-        new PugPlugin({
-            extractCss: {
-                filename: 'assets/css/[name].[contenthash:8].css',
-            },
+        new MiniCssExtractPlugin({
+            filename: 'assets/css/[name].css',
+        }),
+        new HandlebarsPlugin({
+            entry: __dirname + '/src/pages/*.hbs',
+            output: __dirname + '/dist/[name].html',
+            partials: [
+                __dirname + '/src/components/*/*.hbs',
+            ],
+            data: __dirname + '/src/data.json',
+            helpers: {
+                devMode: () => devMode,
+            }
         }),
     ]
 };
