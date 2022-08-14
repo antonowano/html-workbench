@@ -1,5 +1,6 @@
 const HandlebarsPlugin = require('handlebars-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ImageMinimizerPlugin = require('image-minimizer-webpack-plugin');
 const devMode = process.env.NODE_ENV !== 'production';
 
 module.exports = {
@@ -20,11 +21,19 @@ module.exports = {
             {
                 test: /\.s[ac]ss$/i,
                 use: [
-                    devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     'css-loader',
                     'postcss-loader',
                     'sass-loader',
                 ],
+            },
+            {
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                type: 'asset/resource',
+            },
+            {
+                test: /\.(woff|woff2|eot|ttf|otf)$/i,
+                type: 'asset/resource',
             },
         ]
     },
@@ -43,5 +52,22 @@ module.exports = {
                 devMode: () => devMode,
             }
         }),
-    ]
+    ],
+    optimization: {
+        minimizer: [
+            new ImageMinimizerPlugin({
+                minimizer: {
+                    implementation: ImageMinimizerPlugin.imageminMinify,
+                    options: {
+                        plugins: [
+                            'imagemin-gifsicle',
+                            'imagemin-mozjpeg',
+                            'imagemin-optipng',
+                            'imagemin-svgo',
+                        ]
+                    }
+                }
+            }),
+        ]
+    }
 };
